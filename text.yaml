@@ -1,0 +1,61 @@
+---
+- name: Jenkins installation
+  hosts: '{{ hosts }}'
+  become: true
+  tasks:
+          - name: Add EPEL repository
+            yum_repository:
+                    name: epel
+                    description: EPEL YUM Repo
+                    state: absent
+
+          - name: Removing jenkins repo
+            yum_repository:
+                    name: jenkins
+                    description: Jenkins YUM Repo
+                    state: absent
+                    
+          - name: yum-clean-metadata
+            command: yum clean metadata
+            args:
+                    warn: no
+
+          - name: install JAVA
+            yum:
+                    name: java-11-openjdk-devel
+                    state: present
+
+          - name: Import Jenkins Key
+            rpm_key:
+                    state: present
+                    key: https://jenkins-ci.org/redhat/jenkins-ci.org.key
+
+
+          - name: download jenkins.repo
+            get_url:
+                    url: http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
+                    dest: /etc/yum.repos.d/jenkins.repo
+
+          - name: install Jenkins
+            yum:
+                    name: jenkins
+                    state: latest
+
+          - name: Start service jenkins, if not started
+            service:
+                    name: jenkins
+                    state: started
+
+          - name: Enable service jenkins, and not touch the state
+            service:
+                    name: jenkins
+                    enabled: yes
+
+          - name: init password jenkin
+            shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+            changed_when: false
+            register: result
+
+          - name: print init password jenkins
+            debug:
+                    var: result.stdout
