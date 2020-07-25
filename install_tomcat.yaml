@@ -1,0 +1,42 @@
+---
+- name: Installing Tomcat
+  hosts: node
+  become: true
+  vars:
+          req_tomcat_ver: 9.0.37
+          tomcat_url: https://mirrors.estointernet.in/apache/tomcat/tomcat-{{ req_tomcat_ver.split('.')[0] }}/v{{ req_tomcat_ver }}/bin/apache-tomcat-{{ req_tomcat_ver }}.tar.gz
+
+          tomcat_port: 8090
+
+  tasks:
+          - name: Updating repos
+            yum:
+                    name: "*"
+                    state: latest
+
+          - name: Downloading required tomcat
+            get_url:
+                    url: '{{ tomcat_url }}'
+                    dest: /usr/local
+
+          - name: Extracting downloaded tomcat
+            unarchive:
+                    src: "/usr/local/apache-tomcat-{{ req_tomcat_ver }}.tar.gz"
+                    dest: /usr/local
+                    remote_src: yes
+
+          - name: Renaming tomcat home
+            command: mv /usr/local/apache-tomcat-{{ req_tomcat_ver }} /usr/local/latest
+
+          - name: Changing tomcat port number
+            template:
+                    src: /var/lib/jenkins/ansible-playbook/tomcat/server.xml.j2
+                    dest: /usr/local/latest/conf/server.xml
+
+          - name: Create tomcat users
+            template:
+                    src: /var/lib/jenkins/ansible-playbook/tomcat/tomcat-users.xml.j2
+                    dest: /usr/local/latest/conf/tomcat-user.xml
+
+          - name: Starting tomcat server
+            shell: nohup /usr/local/latest/bin/startup.sh &

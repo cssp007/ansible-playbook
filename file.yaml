@@ -1,6 +1,6 @@
 ---
 - name: file module
-  hosts: '{{ hosts }}'
+  hosts: node
   become: true
   tasks:
           - name: Create file
