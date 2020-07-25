@@ -1,0 +1,24 @@
+---
+- name: file module
+  hosts: '{{ hosts }}'
+  become: true
+  tasks:
+          - name: Create file
+            file:
+                    path: /tmp/test.txt
+                    state: touch
+                    mode: u+wr,g-wx,o-wrx
+
+          - name: Check stat of a file
+            stat:
+                    path: /tmp/test.txt
+            register: st
+
+          - fail:
+                  msg: "Whoops! file ownership has changed"
+            when: st.stat.pw_name != 'root'
+
+          - debug:
+                  msg: '{{ st }}'
+
+
