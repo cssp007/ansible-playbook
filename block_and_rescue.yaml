@@ -1,0 +1,22 @@
+---
+- name: Black and rescue example
+  hosts: '{{ hosts }}'
+  gather_facts: false
+  become: true
+  tasks:
+          - block:
+                  - name: List file and dir in /home/spandey
+                    command: "ls /home/spandey"
+                    register: spandey
+
+                  - name: Show the files and dir
+                    debug:
+                            var=spandey
+            rescue:
+                    - name: If block is fails then it will run
+                      debug:
+                              msg: "No such dir"
+            always:
+                    - name: This is running always
+                      debug:
+                              msg: "This is running always"
